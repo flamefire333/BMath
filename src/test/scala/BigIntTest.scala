@@ -30,7 +30,7 @@ class BigIntTest extends FunSuite{
       val y = r.nextInt()
       val xi = IntB(x)
       val yi = IntB(y)
-      assert((xi +  yi).getLongValue == (x.toLong + y.toLong))
+      assert((xi +  yi).getLongValue == (x.toLong + y.toLong), s"failed on $x + $y")
     })
   }
 
@@ -73,6 +73,35 @@ class BigIntTest extends FunSuite{
       val xi = IntB(x)
       val yi = IntB(y)
       assert((xi >  yi) == (x.toLong > y.toLong))
+    })
+  }
+
+  test("Square Test") {
+    val r = util.Random
+    Range(0, 500).foreach(_ => {
+      val x = r.nextInt()
+      val xi = IntB(x)
+      assert((xi.square).getLongValue == (x.toLong * x.toLong))
+    })
+  }
+
+  test("Sqrt Test") {
+    val r = util.Random
+    Range(0, 500).foreach(_ => {
+      val x = r.nextInt(100000)
+      val xi = IntB(x)
+      assert(xi.sqrt.get.getLongValue == math.sqrt(x.toLong).toLong)
+    })
+  }
+
+  test("Pow Test") {
+    val r = util.Random
+    Range(0, 100).foreach(_ => {
+      val x = r.nextInt(4).toLong
+      val xi = IntB(x)
+      val y = r.nextInt(20).toLong
+      val yi = IntB(y)
+      assert(xi.pow(yi).get.getLongValue == Range(0, y.intValue()).foldLeft(1L)((old, _) => old * x))
     })
   }
 

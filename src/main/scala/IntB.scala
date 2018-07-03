@@ -6,6 +6,12 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
     IntB(base.zipWithIndex.map(data => if(data._2 == idx) state else data._1), is_negated)
   }
 
+  def compact : IntB = {
+    val nbits = bits.reverse.dropWhile(b => b == is_negated).reverse
+    IntB(nbits, is_negated)
+    //this
+  }
+
   def getBit(idx : Int) : Boolean = {
     if(idx < bits.size) bits(idx) else is_negated
   }
@@ -83,6 +89,7 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
       val carryOut = (o1 & o2) | (o1 & carryIn) | (o2 & carryIn)
       (data._1.setBit(index, toPut), carryOut)
     })
+    val outBits = nData._1.bits
     if(nData._2) {
       /*
       Carry cases
@@ -92,12 +99,16 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
       1 1 ..1x
       */
       if (!is_negated && !o.is_negated) {
-        IntB(nData._1.bits :+ true, false)
+        IntB(outBits :+ true, false).compact
       } else {
-        IntB(nData._1.bits, is_negated & o.is_negated)
+        IntB(outBits, is_negated & o.is_negated).compact
       }
     } else {
-      IntB(nData._1.bits, is_negated ^ o.is_negated)
+      if(is_negated && o.is_negated) {
+        IntB(outBits :+ false, true).compact
+      } else {
+        IntB(outBits, is_negated ^ o.is_negated).compact
+      }
     }
   }
 
@@ -123,6 +134,35 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
     }
   }
 
+  def pow(exp : IntB) : Option[IntB] = {
+    if(exp.is_negated) {
+      None
+    } else {
+      val (ans, _) = exp.bits.foldLeft((IntB.ONE, None : Option[IntB]))((curr, isSet) => {
+        val ansSoFar = curr._1
+        val o : Option[IntB] = curr._2
+        val sqPow = o.fold(this)(s => s.square)
+        (if(isSet) ansSoFar * sqPow else ansSoFar, Some(sqPow))
+      })
+      Some(ans)
+    }
+  }
+
+  def square : IntB = {
+    (this * this).compact
+  }
+
+  def sqrt : Option[IntB] = {
+    if(this.is_negated) {
+      None
+    } else {
+      Some(Range(bits.size / 2 + 2, -1, -1).foldLeft(IntB.ZERO)((old, i) => {
+        val toTest = old + (IntB.ONE << i).compact
+        if (toTest.square > this) old else toTest
+      }))
+    }
+  }
+
   def getLongValue : Long = {
     Range(0, 63).foldLeft(0L)((old, i) => old ^ ((if(getBit(i)) 1L else 0L) << i)) ^ ((if(is_negated) 1L else 0L) << 63)
   }
@@ -134,11 +174,15 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
   override def toString: String = {
     (if(is_negated) "-" else "") + "0b" + bits.foldLeft("")((old, bit) => (if(bit) "1" else "0") + old)
   }
+
+  def toLongBinaryString : String = {
+    Range(0, 64).foldLeft("")((old, bit) => (if(getBit(bit)) "1" else "0") + old)
+  }
 }
 
 object IntB {
   def apply(value : Long) : IntB = {
-    IntB(Range(0, 64).map(i => ((value >> i) & 1) == 1), value < 0)
+    IntB(Range(0, 64).map(i => ((value >> i) & 1) == 1), value < 0).compact
   }
   val ZERO = IntB(Seq(), false)
   val ONE = IntB(Seq(true), false)
