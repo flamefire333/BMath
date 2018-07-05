@@ -134,6 +134,36 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
     }
   }
 
+  def divmod(o : IntB) : Option[(IntB, IntB)] = {
+    if(o == IntB.ZERO) {
+      None
+    } else {
+      (is_negated, o.is_negated) match {
+        case (true, true) => (-this).divmod(-o).map(data => (data._1, -data._2))
+        case (true, false) => (-this).divmod(o).map(data => (-data._1, -data._2))
+        case (false, true) => this.divmod(-o).map(data => (-data._1, data._2))
+        case (false, false) => {
+          Some(Range(0, this.bits.size).foldLeft((IntB.ZERO, this))((curr, index) => {
+            val shiftAmount = this.bits.size - index - 1
+            val currAmt = curr._2
+            val currOut = curr._1
+            val comp = currAmt >> shiftAmount
+            if(comp >= o) {
+              val t = (IntB.ONE << (shiftAmount))
+              (currOut + t, currAmt - (o << shiftAmount))
+            } else {
+              (currOut, currAmt)
+            }
+          }))
+        }
+      }
+    }
+  }
+
+  def /(o : IntB) : Option[IntB] = this.divmod(o).map(a => a._1)
+
+  def %(o : IntB) : Option[IntB] = this.divmod(o).map(a => a._2)
+
   def pow(exp : IntB) : Option[IntB] = {
     if(exp.is_negated) {
       None

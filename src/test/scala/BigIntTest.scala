@@ -105,4 +105,29 @@ class BigIntTest extends FunSuite{
     })
   }
 
+  test("Division Test") {
+    val r = util.Random
+    Range(0, 500).foreach(_ => {
+      val x = r.nextInt()
+      val y = r.nextInt()
+      val xi = IntB(x)
+      val yi = IntB(y)
+      if(y != 0) {
+        assert((xi / yi).get.getLongValue == (x.toLong / y.toLong))
+      }
+    })
+  }
+
+  test("Mod Test") {
+    val r = util.Random
+    Range(0, 500).foreach(_ => {
+      val x = r.nextInt()
+      val y = r.nextInt()
+      val xi = IntB(x)
+      val yi = IntB(y)
+      if(y != 0) {
+        assert((xi % yi).get.getLongValue == (x.toLong % y.toLong))
+      }
+    })
+  }
 }
