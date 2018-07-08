@@ -40,6 +40,23 @@ case class IntB(bits : Seq[Boolean], is_negated : Boolean) {
     IntB(Range(0, math.max(bits.size, o.bits.size)).map(i => getBit(i) | o.getBit(i)), is_negated | o.is_negated)
   }
 
+  def abs : IntB = {
+    if(this.is_negated) -this else this
+  }
+
+  def gcd(o : IntB) : IntB = {
+    val a = this.abs
+    val b = o.abs
+    if(b < a) {
+      b.gcd(a)
+    }
+    else if(a == IntB.ZERO) {
+      b
+    } else {
+      (b % this).get.gcd(a)
+    }
+  }
+
   def >(o : IntB) : Boolean = {
     if(this.is_negated) {
       if(o.is_negated) {

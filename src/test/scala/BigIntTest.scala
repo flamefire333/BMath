@@ -130,4 +130,23 @@ class BigIntTest extends FunSuite{
       }
     })
   }
+
+  test("GCD Test") {
+    val r = util.Random
+    Range(0, 500).foreach(_ => {
+      val x = r.nextInt()
+      val y = r.nextInt()
+      val xi = IntB(x)
+      val yi = IntB(y)
+      val gc = xi.gcd(yi)
+      if(gc == IntB.ZERO) {
+        assert(xi == IntB.ZERO)
+        assert(yi == IntB.ZERO)
+      } else {
+        assert((xi % gc).get == IntB.ZERO)
+        assert((yi % gc).get == IntB.ZERO)
+        assert((xi / gc).get.gcd((yi / gc).get) == IntB.ONE)
+      }
+    })
+  }
 }
